@@ -10,8 +10,27 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.tigon.biniam.android.command_deligation_demo.MainActivity">
 
-    <TextView
+    <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="179dp"
+        android:id="@+id/inputText"
+        style="@style/Widget.AppCompat.EditText"
+        android:hint="command"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:text="OK"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="38dp"
+        android:id="@+id/goBtn"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:onClick="executeCommand"
+        android:layout_below="@+id/inputText"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
