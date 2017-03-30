@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">Command deligation demo</string>
+    <string name="app_name">Command delegation demo</string>
     <string name="title_activity_db_helper">DbHelper</string>
 </resources>
