@@ -10,8 +10,10 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     public EditText input;
     // Request code for READ_CONTACTS. It can be any number > 0.
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS =0 ;
     public String contactName;
     public String contactNumber;
     public String amharicName;
@@ -123,7 +126,13 @@ public class MainActivity extends AppCompatActivity {
                     amharicName = com2.substring(1);
                 }
                 String phone = getContact();
-                makeACall(phone);
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+
             }
             //call
             else if(containsCallPhrase2 ){
@@ -131,15 +140,21 @@ public class MainActivity extends AppCompatActivity {
                     amharicName = com1.substring(1);
                 }
                 String phone = getContact();
-                makeACall(phone);
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
             }
             //message
             else if((containsMessagePhrase1 && containsMessageSufix2) || (containsMessagePhrase2 && containsMessageSufix1)){
                 isCall = false;
                 getCallerName();
             }
+
             else{
-                Toast.makeText(this,"len: 2, Command not recognized:" + com2,Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"len: 2, Command not recognized:" ,Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -172,45 +187,168 @@ public class MainActivity extends AppCompatActivity {
             else if(com1.compareToIgnoreCase("ለ") ==0 && containsCallPhrase3){
                 amharicName = com2;
                 String phone = getContact();
-                makeACall(phone);
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
             }
             //call2
             else if(containsCallPhrase1 && com2.compareToIgnoreCase("ለ")==0){
                 amharicName = com3;
                 String phone = getContact();
-                makeACall(phone);
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
             }
             //message1
             else if(com1.compareToIgnoreCase("ለ")==0 && containsMessagePhrase3){
-                amharicName = com2;
+                if(com2.length()>1){
+                    amharicName = com2;
+                }
                 String phone = getContact();
-                getMessageContent(phone);
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+
             }
             //message2
             else if(containsMessagePhrase1 && com2.compareToIgnoreCase("ለ")==0){
-                amharicName = com3;
+                if(com3.length()>1){
+                    amharicName = com3;
+                }
                 String phone = getContact();
-                getMessageContent(phone);
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
             }
             //message3
             else if(containsMessagePhrase2 && containsMessageSufix3){
-                amharicName = com1;
+                if(com1.length()>1){
+                    amharicName = com1.substring(1);
+                }
                 String phone = getContact();
-                getMessageContent(phone);
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found",Toast.LENGTH_SHORT).show();
+                }
             }
             //message4
             else if(containsMessagePhrase1 && containsMessageSufix3){
-                amharicName = com2;
+                if(com2.length()>1){
+                    amharicName = com2.substring(1);
+                }
                 String phone = getContact();
-                getMessageContent(phone);
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
             }
             else{
                 Toast.makeText(this,"len: 3, Command not recognized:" + com2,Toast.LENGTH_SHORT).show();
             }
         }
 
-        else{
+        else if(command.size() == 4){
+            String com1 = command.get(0).toString();
+            String com2 = command.get(1).toString();
+            String com3 = command.get(2).toString();
+            String com4 = command.get(3).toString();
 
+            Boolean containsTime = com1.compareToIgnoreCase("ሠዓት") == 0 || com1.compareToIgnoreCase("ሰዓት") ==0 || com1.compareToIgnoreCase("ሠአት") ==0 || com1.compareToIgnoreCase("ሰአት")==0;
+            Boolean containsTime2 = com2.compareToIgnoreCase("ሠዓት") ==0 || com2.compareToIgnoreCase("ሰዓት") ==0 || com2.compareToIgnoreCase("ሠአት") ==0 || com2.compareToIgnoreCase("ሰአት")==0;
+            Boolean containsCallPhrase1 = com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
+            Boolean containsCallPhrase4 = com4.contains("ደዉል") || com4.contains("ደውል") || com4.contains("ደዉል")|| com4.contains("ደውይ") || com4.contains("ደዉይ") || com4.contains("ደውሉ") || com4.contains("ደዉሉ");
+            Boolean containsMessagePhrase1 = com1.contains("መልክት") || com1.contains("መልእክት") || com1.contains("መልዓክት") || com1.contains("ሜሴጅ") || com1.contains("ሜ\u1224ጅ");
+            Boolean containsMessagePhrase2 = com2.contains("መልክት") || com2.contains("መልእክት") || com2.contains("መልዓክት") || com2.contains("ሜሴጅ") || com2.contains("ሜ\u1224ጅ");
+            Boolean containsMessagePhrase3 = com3.contains("መልክት") || com3.contains("መልእክት") || com3.contains("መልዓክት") || com3.contains("ሜሴጅ") || com3.contains("ሜ\u1224ጅ");
+            Boolean containsMessageSufix1 = com1.contains("ላክ") || com1.contains("ላኪ") || com1.contains("ላኩ");
+            Boolean containsMessageSufix2 = com2.contains("ላክ") || com2.contains("ላኪ") || com2.contains("ላኩ");
+            Boolean containsMessageSufix4 = com4.contains("ላክ") || com4.contains("ላኪ") || com4.contains("ላኩ");
+
+            //time1
+            if((com1.compareToIgnoreCase("ስንት") ==0 || com1.compareToIgnoreCase("ንገሪኝ") ==0 || com1.compareToIgnoreCase("ንገረኝ") ==0) && (containsTime2)){
+                tellTime();
+            }
+            //time2
+            else if((com2.compareToIgnoreCase("ስንት") ==0 || com2.compareToIgnoreCase("ንገሪኝ") ==0 || com2.compareToIgnoreCase("ንገረኝ") ==0) && (containsTime)){
+                tellTime();
+            }
+            //call1
+            else if(com1.compareToIgnoreCase("ለ") ==0 && containsCallPhrase4){
+                amharicName = com2 + com3;
+                String phone = getContact();
+                if(phone == "Unsaved"){
+                    amharicName = com2 + " "+ com3;
+                    phone = getContact();
+                }
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+
+            }
+            //call2
+            else if(containsCallPhrase1 && com2.compareToIgnoreCase("ለ")==0){
+                amharicName = com3 + com4;
+                String phone = getContact();
+                if(phone == "Unsaved"){
+                    amharicName = com3 + " "+ com4;
+                    phone = getContact();
+                }
+                if(phone != "Unsaved"){
+                    makeACall(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+            }
+            //message1
+            else if(containsMessagePhrase3 && containsMessageSufix4){
+                if(com2.length()>1){
+                    amharicName = com2;
+                }
+                String phone = getContact();
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+
+            }
+            //message2
+            else if(containsMessagePhrase1 && containsMessageSufix4){
+                if(com3.length()>1){
+                    amharicName = com3;
+                }
+                String phone = getContact();
+                if(phone != "Unsaved"){
+                    getMessageContent(phone);
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        else{
+            Toast.makeText(this,"Command not recognized:",Toast.LENGTH_SHORT).show();
         }
 
 
@@ -516,7 +654,15 @@ public class MainActivity extends AppCompatActivity {
                 // Permission is granted
                 getContact();
             } else {
-                Toast.makeText(this, "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Until you grant the permission, we can not access contacts", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else if(requestCode == MY_PERMISSIONS_REQUEST_SEND_SMS){
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission is granted
+                prepareSmsManager();
+            } else {
+                Toast.makeText(this, "Until you grant the permission, we can not send SMS", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -539,7 +685,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void makeACall(String phone){
         Toast.makeText(this, "phone number: "+phone,Toast.LENGTH_SHORT).show();
-        //call(phone);
+        call(phone);
     }
     public String tellTime(){
         String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
@@ -547,6 +693,48 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
     public void sendMessage(View view){
+        prepareSmsManager();
+    }
+    public void getCallerName(){
+        setContentView(R.layout.contact);
+    }
+    public void getCallerPhone(View view){
+        amharicName = ((EditText)findViewById(R.id.contactInputText)).getText().toString().trim();
+        String number = getContact();
+        contactNumber = number;
+
+        if(isCall){
+            //make the actual call
+            makeACall(number);
+        }
+        else{
+            getMessageContent(number);
+        }
+
+    }
+
+    public void getMessageContent(String phone){
+        setContentView(R.layout.message_content);
+        contactNumber = phone;
+        Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
+    }
+    public void prepareSmsManager(){
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        }
+        else {
+            SmsManager smsManager = SmsManager.getDefault();
+            String content = ((EditText)findViewById(R.id.contentInput)).getText().toString();
+            Log.i("Send SMS", "");
+            smsManager.sendTextMessage(contactNumber, null, content, null, null);
+            Toast.makeText(getApplicationContext(), "SMS sent.",
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+    public void prepareSms(){
         String content = ((EditText)findViewById(R.id.contentInput)).getText().toString();
         Log.i("Send SMS", "");
         Intent smsIntent = new Intent(Intent.ACTION_VIEW);
@@ -565,28 +753,8 @@ public class MainActivity extends AppCompatActivity {
                     "SMS faild, please try again later.", Toast.LENGTH_SHORT).show();
         }
     }
-    public void getCallerName(){
-        setContentView(R.layout.contact);
-    }
-    public void getCallerPhone(View view){
-        amharicName = ((EditText)findViewById(R.id.contactInputText)).getText().toString();
-        String number = getContact();
-        contactNumber = number;
-
-        if(isCall){
-            //make the actual call
-            makeACall(number);
-        }
-        else{
-            getMessageContent(number);
-        }
-
-    }
-
-    public void getMessageContent(String phone){
-        setContentView(R.layout.message_content);
-        contactNumber = phone;
-        Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
+    public void backAction(){
+        setContentView(R.layout.activity_main);
     }
 
 }
