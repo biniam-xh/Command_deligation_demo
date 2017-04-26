@@ -39,6 +39,12 @@ public class MainActivity extends AppCompatActivity {
     public String amharicName;
     public String messageContent;
     public Boolean isCall = false;
+    public Boolean isMail = false;
+    public String subject;
+    public String body;
+    public String receiverEmail;
+    public String senderEmail = "se.biniam.anteneh@gmail.com";
+
 
 
     @Override
@@ -86,11 +92,13 @@ public class MainActivity extends AppCompatActivity {
             //call
             else if(com.contains("ደዉል") || com.contains("ደውል") || com.contains("ደዉል")|| com.contains("ደውይ") || com.contains("ደዉይ") || com.contains("ደውሉ") || com.contains("ደዉሉ")){
                 isCall = true;
+                isMail = false;
                 getCallerName();
             }
             //message
             else if(com.contains("መልክት") || com.contains("መልእክት") || com.contains("መልዓክት") || com.contains("ሜሴጅ") || com.contains("ሜ\u1224ጅ")){
                 isCall = false;
+                isMail = false;
                 getCallerName();
             }
             else{
@@ -111,6 +119,9 @@ public class MainActivity extends AppCompatActivity {
             Boolean containsMessagePhrase2 = com2.contains("መልክት") || com2.contains("መልእክት") || com2.contains("መልዓክት") || com2.contains("ሜሴጅ") || com2.contains("ሜ\u1224ጅ");
             Boolean containsMessageSufix1 = com1.contains("ላክ") || com1.contains("ላኪ") || com1.contains("ላኩ");
             Boolean containsMessageSufix2 = com2.contains("ላክ") || com2.contains("ላኪ") || com2.contains("ላኩ");
+            Boolean containsEmailPharase1 = com1.compareToIgnoreCase("ኢሜል") == 0;
+            Boolean containsEmailPharase2 = com2.compareToIgnoreCase("ኢሜል") == 0;
+
 
             //time
             if(containsTime){
@@ -150,7 +161,14 @@ public class MainActivity extends AppCompatActivity {
             //message
             else if((containsMessagePhrase1 && containsMessageSufix2) || (containsMessagePhrase2 && containsMessageSufix1)){
                 isCall = false;
+                isMail = false;
                 getCallerName();
+            }
+            //email1
+            else if((containsEmailPharase1 && containsMessageSufix2) || (containsEmailPharase2 && containsMessageSufix1)){
+                isCall = false;
+                isMail = true;
+                getEmailContent();
             }
 
             else{
@@ -174,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
             Boolean containsMessageSufix1 = com1.contains("ላክ") || com1.contains("ላኪ") || com1.contains("ላኩ");
             Boolean containsMessageSufix2 = com2.contains("ላክ") || com2.contains("ላኪ") || com2.contains("ላኩ");
             Boolean containsMessageSufix3 = com3.contains("ላክ") || com3.contains("ላኪ") || com3.contains("ላኩ");
+            Boolean containsEmailPharase1 = com1.compareToIgnoreCase("ኢሜል") == 0;
+            Boolean containsEmailPharase2 = com2.compareToIgnoreCase("ኢሜል") == 0;
 
             //time1
             if((com1.compareToIgnoreCase("ስንት") ==0 || com1.compareToIgnoreCase("ንገሪኝ") ==0 || com1.compareToIgnoreCase("ንገረኝ") ==0) && (containsTime2)){
@@ -258,6 +278,32 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
                 }
             }
+            //email1
+            else if(containsEmailPharase1 && containsMessageSufix3){
+                if(com2.length()>1){
+                    amharicName = com2.substring(1);
+                }
+                receiverEmail = getEmail();
+                if(receiverEmail != "Unsaved"){
+                    getEmailContent();
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+            }
+            //email2
+            else if(containsEmailPharase2 && containsMessageSufix3){
+                if(com2.length()>1){
+                    amharicName = com1.substring(1);
+                }
+                receiverEmail = getEmail();
+                if(receiverEmail != "Unsaved"){
+                    getEmailContent();
+                }
+                else{
+                    Toast.makeText(this,"contact not found" ,Toast.LENGTH_SHORT).show();
+                }
+            }
             else{
                 Toast.makeText(this,"len: 3, Command not recognized:" + com2,Toast.LENGTH_SHORT).show();
             }
@@ -290,7 +336,12 @@ public class MainActivity extends AppCompatActivity {
             }
             //call1
             else if(com1.compareToIgnoreCase("ለ") ==0 && containsCallPhrase4){
-                amharicName = com2 + com3;
+                if(com3.compareToIgnoreCase("ስልክ") ==0){
+                    amharicName = com2;
+                }
+                else{
+                    amharicName = com2 + com3;
+                }
                 String phone = getContact();
                 if(phone == "Unsaved"){
                     amharicName = com2 + " "+ com3;
@@ -644,6 +695,35 @@ public class MainActivity extends AppCompatActivity {
         }
         return ret;
     }
+    public String getEmail() {
+        String ret = null;
+
+        String s = amharicName;
+        String name = "";
+        for (int i =0; i<s.length(); i++){
+            String fidel = s.charAt(i)+"";
+            if(fidelMap.get(fidel) != null){
+                contactName += fidelMap.get(fidel);
+            }
+        }
+
+        String where = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME_PRIMARY + " like '";
+        //String selection = name;
+        where = where + name+"%'";
+        //String[] selectionArgs = {selection};
+
+        String[] projection = new String[]{ContactsContract.CommonDataKinds.Email.ADDRESS};
+        Cursor c = this.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection, where, null, null);
+        if (c.moveToLast()) {
+            ret = c.getString(0);
+        }
+        c.close();
+        if (ret == null) {
+            ret = "Unsaved";
+        }
+        return ret;
+    }
 
 
     @Override
@@ -707,6 +787,9 @@ public class MainActivity extends AppCompatActivity {
             //make the actual call
             makeACall(number);
         }
+        else if(isMail){
+            //
+        }
         else{
             getMessageContent(number);
         }
@@ -717,6 +800,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.message_content);
         contactNumber = phone;
         Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
+    }
+    public void getEmailContent(){
+        setContentView(R.layout.mailer);
+        //Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
     }
     public void prepareSmsManager(){
 
@@ -753,8 +840,43 @@ public class MainActivity extends AppCompatActivity {
                     "SMS faild, please try again later.", Toast.LENGTH_SHORT).show();
         }
     }
-    public void backAction(){
+    public void backAction(View view){
         setContentView(R.layout.activity_main);
     }
 
+    protected void sendEmail(View view) {
+        Log.i("Send email", "");
+        String[] TO = {"biniam.xh@gmail.com"};
+        String[] CC = {""};
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Your subject");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "Email message goes here");
+
+        try {
+            startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+            finish();
+            Log.i("Finished sending email", "");
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(MainActivity.this, "There is no email client installed.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    protected void sendEmail2(View view){
+
+        receiverEmail= ((EditText)findViewById(R.id.emailText)).toString();
+        subject = ((EditText)findViewById(R.id.subjectText)).toString();
+        body = ((EditText)findViewById(R.id.bodyText)).toString();
+        try {
+
+            GMailSender sender = new GMailSender(senderEmail, "megatron0");
+            sender.sendMail(subject,
+                    body, senderEmail,receiverEmail);
+        } catch (Exception e) {
+            Log.d("SendMail", e.getMessage(), e);
+        }
+    }
 }
