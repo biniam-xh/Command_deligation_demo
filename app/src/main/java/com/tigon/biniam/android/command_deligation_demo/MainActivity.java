@@ -1,16 +1,17 @@
 package com.tigon.biniam.android.command_deligation_demo;
 
 import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
@@ -18,14 +19,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import android.provider.ContactsContract.Contacts;
+import android.widget.ViewFlipper;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
+
+import static xdroid.toaster.Toaster.toast;
+import static xdroid.toaster.Toaster.toastLong;
+
 
 public class MainActivity extends AppCompatActivity {
     Map<String, String> fidelMap = new HashMap<String, String>();
@@ -44,7 +48,9 @@ public class MainActivity extends AppCompatActivity {
     public String body;
     public String receiverEmail;
     public String senderEmail = "se.biniam.anteneh@gmail.com";
-
+    public String newContactPhone = "";
+    public GMailSender sender;
+    public Context context;
 
 
     @Override
@@ -56,11 +62,14 @@ public class MainActivity extends AppCompatActivity {
 
         loadFidelMap();
 
+        context = this;
+
     }
 
     public void executeCommand(View view) {
         //Toast.makeText(this,fidelMap.get("በ"),Toast.LENGTH_SHORT).show();
-        String str = input.getText().toString().trim();
+        //String str = input.getText().toString().trim();
+        String str = input.getText().toString().trim().replaceAll("[.]", "");
 
         ArrayList command = new ArrayList();
         //command.add(str.charAt(0)+"");
@@ -89,8 +98,8 @@ public class MainActivity extends AppCompatActivity {
             if(com.compareToIgnoreCase("ሠዓት") ==0 || com.compareToIgnoreCase("ሰዓት")==0 || com.compareToIgnoreCase("ሠአት")==0 || com.compareToIgnoreCase("ሰአት")==0){
                 tellTime();
             }
-            //call
-            else if(com.contains("ደዉል") || com.contains("ደውል") || com.contains("ደዉል")|| com.contains("ደውይ") || com.contains("ደዉይ") || com.contains("ደውሉ") || com.contains("ደዉሉ")){
+            //cal
+            else if(com.contains("ደዉ") || com.contains("ደው") || com.contains("ደዉል") || com.contains("ደውል") || com.contains("ደዉል")|| com.contains("ደውይ") || com.contains("ደዉይ") || com.contains("ደውሉ") || com.contains("ደዉሉ")){
                 isCall = true;
                 isMail = false;
                 getCallerName();
@@ -100,6 +109,10 @@ public class MainActivity extends AppCompatActivity {
                 isCall = false;
                 isMail = false;
                 getCallerName();
+            }
+            //new contact
+            else if(com.contains("ስልክ")){
+                setContentView(R.layout.new_contact_1);
             }
             else{
                 Toast.makeText(this,"Command not recognized! " + com,Toast.LENGTH_SHORT).show();
@@ -113,8 +126,8 @@ public class MainActivity extends AppCompatActivity {
             //time
             Boolean containsTime = com1.compareToIgnoreCase("ሠዓት") == 0 || com1.compareToIgnoreCase("ሰዓት") ==0 || com1.compareToIgnoreCase("ሠአት") ==0 || com1.compareToIgnoreCase("ሰአት")==0;
             Boolean containsTime2 = com2.compareToIgnoreCase("ሠዓት") == 0 || com2.compareToIgnoreCase("ሰዓት") ==0 || com2.compareToIgnoreCase("ሠአት") ==0 || com2.compareToIgnoreCase("ሰአት")==0;
-            Boolean containsCallPhrase1 = com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
-            Boolean containsCallPhrase2 = com2.contains("ደዉል") || com2.contains("ደውል")|| com2.contains("ደዉል")|| com2.contains("ደውይ") || com2.contains("ደዉይ") || com2.contains("ደውሉ") || com2.contains("ደዉሉ");
+            Boolean containsCallPhrase1 = com1.contains("ደዉ") || com1.contains("ደው") || com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
+            Boolean containsCallPhrase2 = com2.contains("ደዉ") || com2.contains("ደው") || com2.contains("ደዉል") || com2.contains("ደውል")|| com2.contains("ደዉል")|| com2.contains("ደውይ") || com2.contains("ደዉይ") || com2.contains("ደውሉ") || com2.contains("ደዉሉ");
             Boolean containsMessagePhrase1 = com1.contains("መልክት") || com1.contains("መልእክት") || com1.contains("መልዓክት") || com1.contains("ሜሴጅ") || com1.contains("ሜ\u1224ጅ");
             Boolean containsMessagePhrase2 = com2.contains("መልክት") || com2.contains("መልእክት") || com2.contains("መልዓክት") || com2.contains("ሜሴጅ") || com2.contains("ሜ\u1224ጅ");
             Boolean containsMessageSufix1 = com1.contains("ላክ") || com1.contains("ላኪ") || com1.contains("ላኩ");
@@ -170,6 +183,17 @@ public class MainActivity extends AppCompatActivity {
                 isMail = true;
                 getEmailContent();
             }
+            //alarm
+            else if(command.contains("አላርም") || command.contains("ማንቂያ")){
+                setContentView(R.layout.alarm_layout_1);
+            }
+            //new contact
+            else if(com2.contains("ስልክ") && com1.contains("አዲስ") ){
+                setContentView(R.layout.new_contact_1);
+            }
+            else if(com2.contains("መዝግ") && com1.contains("ስልክ") ){
+                setContentView(R.layout.new_contact_1);
+            }
 
             else{
                 Toast.makeText(this,"len: 2, Command not recognized:" ,Toast.LENGTH_SHORT).show();
@@ -184,8 +208,8 @@ public class MainActivity extends AppCompatActivity {
             //time
             Boolean containsTime = com1.compareToIgnoreCase("ሠዓት") == 0 || com1.compareToIgnoreCase("ሰዓት") ==0 || com1.compareToIgnoreCase("ሠአት") ==0 || com1.compareToIgnoreCase("ሰአት")==0;
             Boolean containsTime2 = com2.compareToIgnoreCase("ሠዓት") ==0 || com2.compareToIgnoreCase("ሰዓት") ==0 || com2.compareToIgnoreCase("ሠአት") ==0 || com2.compareToIgnoreCase("ሰአት")==0;
-            Boolean containsCallPhrase1 = com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
-            Boolean containsCallPhrase3 = com3.contains("ደዉል") || com3.contains("ደውል") || com3.contains("ደዉል")|| com3.contains("ደውይ") || com3.contains("ደዉይ") || com3.contains("ደውሉ") || com3.contains("ደዉሉ");
+            Boolean containsCallPhrase1 = com1.contains("ደዉ") || com1.contains("ደው") || com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
+            Boolean containsCallPhrase3 = com3.contains("ደዉ") || com3.contains("ደው") ||com3.contains("ደዉል") || com3.contains("ደውል") || com3.contains("ደዉል")|| com3.contains("ደውይ") || com3.contains("ደዉይ") || com3.contains("ደውሉ") || com3.contains("ደዉሉ");
             Boolean containsMessagePhrase1 = com1.contains("መልክት") || com1.contains("መልእክት") || com1.contains("መልዓክት") || com1.contains("ሜሴጅ") || com1.contains("ሜ\u1224ጅ");
             Boolean containsMessagePhrase2 = com2.contains("መልክት") || com2.contains("መልእክት") || com2.contains("መልዓክት") || com2.contains("ሜሴጅ") || com2.contains("ሜ\u1224ጅ");
             Boolean containsMessagePhrase3 = com3.contains("መልክት") || com3.contains("መልእክት") || com3.contains("መልዓክት") || com3.contains("ሜሴጅ") || com3.contains("ሜ\u1224ጅ");
@@ -317,8 +341,8 @@ public class MainActivity extends AppCompatActivity {
 
             Boolean containsTime = com1.compareToIgnoreCase("ሠዓት") == 0 || com1.compareToIgnoreCase("ሰዓት") ==0 || com1.compareToIgnoreCase("ሠአት") ==0 || com1.compareToIgnoreCase("ሰአት")==0;
             Boolean containsTime2 = com2.compareToIgnoreCase("ሠዓት") ==0 || com2.compareToIgnoreCase("ሰዓት") ==0 || com2.compareToIgnoreCase("ሠአት") ==0 || com2.compareToIgnoreCase("ሰአት")==0;
-            Boolean containsCallPhrase1 = com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
-            Boolean containsCallPhrase4 = com4.contains("ደዉል") || com4.contains("ደውል") || com4.contains("ደዉል")|| com4.contains("ደውይ") || com4.contains("ደዉይ") || com4.contains("ደውሉ") || com4.contains("ደዉሉ");
+            Boolean containsCallPhrase1 = com1.contains("ደዉ") || com1.contains("ደው") || com1.contains("ደዉል") || com1.contains("ደውል") || com1.contains("ደዉል")|| com1.contains("ደውይ") || com1.contains("ደዉይ") || com1.contains("ደውሉ") || com1.contains("ደዉሉ");
+            Boolean containsCallPhrase4 = com4.contains("ደዉ") || com4.contains("ደው") ||com4.contains("ደዉል") || com4.contains("ደውል") || com4.contains("ደዉል")|| com4.contains("ደውይ") || com4.contains("ደዉይ") || com4.contains("ደውሉ") || com4.contains("ደዉሉ");
             Boolean containsMessagePhrase1 = com1.contains("መልክት") || com1.contains("መልእክት") || com1.contains("መልዓክት") || com1.contains("ሜሴጅ") || com1.contains("ሜ\u1224ጅ");
             Boolean containsMessagePhrase2 = com2.contains("መልክት") || com2.contains("መልእክት") || com2.contains("መልዓክት") || com2.contains("ሜሴጅ") || com2.contains("ሜ\u1224ጅ");
             Boolean containsMessagePhrase3 = com3.contains("መልክት") || com3.contains("መልእክት") || com3.contains("መልዓክት") || com3.contains("ሜሴጅ") || com3.contains("ሜ\u1224ጅ");
@@ -678,7 +702,7 @@ public class MainActivity extends AppCompatActivity {
     public String getPhoneNumber(String name) {
         String ret = null;
 
-        String where = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME_PRIMARY + " like '";
+        String where = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME_PRIMARY + " like '%";
         //String selection = name;
         where = where + name+"%'";
         //String[] selectionArgs = {selection};
@@ -695,6 +719,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return ret;
     }
+
     public String getEmail() {
         String ret = null;
 
@@ -724,7 +749,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return ret;
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -763,21 +787,26 @@ public class MainActivity extends AppCompatActivity {
         startActivity(callIntent);
 
     }
+
     public void makeACall(String phone){
         Toast.makeText(this, "phone number: "+phone,Toast.LENGTH_SHORT).show();
         call(phone);
     }
+
     public String tellTime(){
         String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
         Toast.makeText(this,"Time & Date: "+currentDateTimeString,Toast.LENGTH_SHORT).show();
         return null;
     }
+
     public void sendMessage(View view){
         prepareSmsManager();
     }
+
     public void getCallerName(){
         setContentView(R.layout.contact);
     }
+
     public void getCallerPhone(View view){
         amharicName = ((EditText)findViewById(R.id.contactInputText)).getText().toString().trim();
         String number = getContact();
@@ -801,10 +830,12 @@ public class MainActivity extends AppCompatActivity {
         contactNumber = phone;
         Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
     }
+
     public void getEmailContent(){
         setContentView(R.layout.mailer);
         //Toast.makeText(this, "phone: "+phone, Toast.LENGTH_SHORT).show();
     }
+
     public void prepareSmsManager(){
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
@@ -821,6 +852,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     public void prepareSms(){
         String content = ((EditText)findViewById(R.id.contentInput)).getText().toString();
         Log.i("Send SMS", "");
@@ -840,22 +872,31 @@ public class MainActivity extends AppCompatActivity {
                     "SMS faild, please try again later.", Toast.LENGTH_SHORT).show();
         }
     }
+
     public void backAction(View view){
         setContentView(R.layout.activity_main);
     }
 
     protected void sendEmail(View view) {
+        receiverEmail= (((EditText)findViewById(R.id.emailText)).getText()).toString();
+        Toast.makeText(MainActivity.this, ""+receiverEmail, Toast.LENGTH_SHORT).show();
+        subject = ((EditText)findViewById(R.id.subjectText)).getText().toString();
+        body = ((EditText)findViewById(R.id.bodyText)).getText().toString();
+
         Log.i("Send email", "");
-        String[] TO = {"biniam.xh@gmail.com"};
+        String[] TO = {receiverEmail};
         String[] CC = {""};
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+
 
         emailIntent.setData(Uri.parse("mailto:"));
         emailIntent.setType("text/plain");
         emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
         emailIntent.putExtra(Intent.EXTRA_CC, CC);
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Your subject");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "Email message goes here");
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, body);
+
 
         try {
             startActivity(Intent.createChooser(emailIntent, "Send mail..."));
@@ -865,18 +906,348 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, "There is no email client installed.", Toast.LENGTH_SHORT).show();
         }
     }
-    protected void sendEmail2(View view){
-
-        receiverEmail= ((EditText)findViewById(R.id.emailText)).toString();
-        subject = ((EditText)findViewById(R.id.subjectText)).toString();
-        body = ((EditText)findViewById(R.id.bodyText)).toString();
-        try {
-
-            GMailSender sender = new GMailSender(senderEmail, "megatron0");
-            sender.sendMail(subject,
-                    body, senderEmail,receiverEmail);
-        } catch (Exception e) {
-            Log.d("SendMail", e.getMessage(), e);
-        }
+    public void flip1(View view){
+        ViewFlipper viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+        receiverEmail= ((EditText)findViewById(R.id.emailText)).getText().toString();
+        viewFlipper.showNext();
     }
+    public void flip2(View view){
+        ViewFlipper viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+        subject = ((EditText)findViewById(R.id.subjectText)).getText().toString();
+        viewFlipper.showNext();
+    }
+
+    public void sendEmail2(View view){
+
+        body = ((EditText)findViewById(R.id.bodyText)).getText().toString();
+
+
+            //Toast.makeText(this, "SendMail" ,Toast.LENGTH_LONG).show();
+
+            new Thread(new Runnable() {
+            public void run() {
+                // a potentially  time consuming task
+                sender = new GMailSender(senderEmail, "Megatron0");
+                try {   sender.sendMail(subject,
+                        body, senderEmail,receiverEmail);
+                    toastLong("ኢሜሉ ተልኩአል");
+                } catch (Exception e) {
+                    toastLong("ኢሜሉ አልተላከም");
+                    Log.d("SendMail", e.getMessage(), e);
+                }
+            }
+        }).start();
+//
+
+    }
+
+    public void changeLayout(int layout){
+        setContentView(layout);
+    }
+
+    public void executeAlarm(View view){
+        EditText AlarmInput = (EditText) findViewById(R.id.alarmTimeText);
+        String str = AlarmInput.getText().toString().trim().replaceAll("[.]", "");
+
+        ArrayList command = new ArrayList();
+        //command.add(str.charAt(0)+"");
+        String arg = "";
+        for(int i=0; i<str.length(); i++){
+            if(str.charAt(i) == ' '){
+                if(arg != ""){
+                    Log.d(arg,"test");
+
+                    command.add(arg.trim());
+                }
+                arg = "";
+            }
+            arg = arg + str.charAt(i)+"";
+            if(i == str.length()-1){
+                if(arg !=""){
+
+                    command.add(arg.trim());
+                }
+            }
+        }
+        AlarmSetter setter = new AlarmSetter(this);
+        int len = command.size();
+        int h = 8;
+        int m = 0;
+        String AM_PM = "AM";
+        String dayText = "today";
+
+        if(len == 1){
+            int hour = setter.getLastNumbers(command.get(0).toString());
+            if(hour !=-1){
+                h = hour;
+            }
+            Log.d("alarm: ","WC: "+1+" "+h+":"+m+ " "+AM_PM);
+
+            Toast.makeText(this,"alarm: WC: "+1+" "+h+":"+m+ " "+AM_PM, Toast.LENGTH_SHORT).show();
+            //setter.setAlarm(h, 0 , "AM", "");
+        }
+
+        else if(len == 2){
+
+            int hour = setter.getLastNumbers(command.get(0).toString());
+            if(hour == -1){
+                hour = setter.getFirstNumbers(command.get(0).toString());
+
+                if(hour != -1){
+                    int hour2 = setter.getLastNumbers(command.get(1).toString());
+                    if(hour2 != -1){
+                        hour = hour + hour2;
+                        h = hour;
+                    }
+                    else{
+                        h = hour;
+
+                    }
+                }
+            }
+            else{
+                h = hour;
+                String s = command.get(1).toString();
+                if(s.contains("ሰዓት") || s.contains("ሰአት")){
+
+                }
+                else{
+                    //Toast.makeText(this,"test",Toast.LENGTH_SHORT).show();
+                    int minutes = setter.getLastNumbers(command.get(1).toString());
+                    if(minutes != -1){
+                       m = minutes;
+                    }
+                }
+            }
+            Log.d("alarm: ","WC: "+2+" "+h+":"+m+ " "+AM_PM);
+            Toast.makeText(this,"alarm: WC: "+2+" "+h+":"+m+ " "+AM_PM, Toast.LENGTH_SHORT).show();
+            //setter.setAlarm(h,m,AM_PM,dayText);
+        }
+        else if(len == 3){
+            //check to see if the day is given
+            boolean day1 = setter.getDayText(command.get(0).toString()) != "";
+            boolean day2 = setter.getDayText(command.get(1).toString()) != "";
+            boolean day3 = setter.getDayText(command.get(2).toString()) != "";
+            String day = "";
+            if(day1 || day2 || day3){
+                int dayTextIndex = 0;
+                if(day1){
+                    dayTextIndex = 0;
+                }
+                else if(day2){
+                    dayTextIndex = 1;
+                }
+                else if(day3){
+                    dayTextIndex = 2;
+                }
+                day = command.get(dayTextIndex).toString();
+                dayText = setter.getDayText(day);
+                command.remove(dayTextIndex);
+
+                //check to see if "ሰዓት' included
+                String text1 = command.get(0).toString();
+                String text2 = command.get(1).toString();
+                //boolean b1 = (text1.contains("ሰዓት") || text1.contains("ሰአት"));
+                boolean b2 = (text2.contains("ሰዓት") || text2.contains("ሰአት"));
+
+                if(b2){
+                    h = setter.getLastNumbers(command.get(0).toString());
+                }
+            }
+            else{
+
+                //check to see if "ሰዓት' included
+                String text1 = command.get(0).toString();
+                String text2 = command.get(1).toString();
+                String text3 = command.get(2).toString();
+                boolean b1 = (text1.contains("ሰዓት") || text1.contains("ሰአት"));
+                boolean b2 = (text2.contains("ሰዓት") || text2.contains("ሰአት"));
+                boolean b3 = (text3.contains("ሰዓት") || text3.contains("ሰአት"));
+
+                int removeIndex = -1;
+                if(b1){
+                    removeIndex = 0;
+                }
+                else if(b2){
+                    removeIndex = 1;
+                }
+                else if(b3){
+                    removeIndex = 2;
+                }
+
+                if(removeIndex != -1){
+                    command.remove(removeIndex);
+                    int hour = setter.getLastNumbers(command.get(0).toString());
+                    if(hour !=-1){
+                        h = hour;
+                    }
+                    else{
+
+                        int hour2 = setter.getFirstNumbers(command.get(0).toString());
+                        if(hour2 != -1){
+
+                            hour = setter.getLastNumbers(command.get(1).toString());
+                            if(hour !=-1){
+                                h = hour + hour2;
+                            }
+                        }
+                        else{
+                            hour = setter.getLastNumbers(command.get(1).toString());
+                            if(hour !=-1){
+                                h = hour;
+                            }
+                        }
+
+                    }
+                    int minutes = setter.getLastNumbers(command.get(1).toString());
+                    if(minutes != -1){
+                        m = minutes;
+                    }
+
+                    String am_pm = setter.getPM_AM(command.get(1).toString());
+                    if(am_pm != "MM"){
+                        AM_PM = am_pm;
+                    }
+                    am_pm = setter.getPM_AM(command.get(0).toString());
+                    if(am_pm != "MM"){
+                        AM_PM = am_pm;
+                    }
+
+                }
+                //no hour label
+                else{
+                    int minutes = setter.getLastNumbers(command.get(2).toString());
+                    if(minutes != -1 && !command.get(1).toString().contains("ጉዳይ")){
+                        m = minutes;
+                        command.remove(2);
+                        String am_pm = setter.getPM_AM(command.get(0).toString());
+                        if(am_pm != "MM"){
+                            AM_PM = am_pm;
+                        }
+                        int hour2 = setter.getFirstNumbers(command.get(0).toString());
+                        if(hour2!=-1){
+                            int hour = setter.getLastNumbers(command.get(1).toString());
+                            if(hour!=-1){
+                                h = hour + hour2;
+                            }
+                        }
+
+                    }
+                    else {
+                        minutes = setter.getLastNumbers(command.get(1).toString());
+                        if(minutes != -1 && !command.get(1).toString().contains("ጉዳይ")){
+                            m = minutes;
+                            int hour = setter.getLastNumbers(command.get(0).toString());
+                            if(hour!=-1){
+                                h = hour;
+                            }
+                            String am_pm = setter.getPM_AM(command.get(0).toString());
+                            if(am_pm != "MM"){
+                                AM_PM = am_pm;
+                            }
+                        }
+                        String am_pm = setter.getPM_AM(command.get(0).toString());
+                        if(am_pm != "MM"){
+                            AM_PM = am_pm;
+                            int hour2 = setter.getFirstNumbers(command.get(1).toString());
+                            if(hour2!=-1){
+                                int hour = setter.getLastNumbers(command.get(2).toString());
+                                if(hour!=-1){
+                                    h = hour + hour2;
+                                }
+                            }
+                        }
+                        else{
+                            minutes = setter.getLastNumbers(command.get(0).toString());
+                            if(minutes != -1){
+                                if((command.get(1).toString()).contains("ጉዳይ")){
+                                    int hour = setter.getLastNumbers(command.get(2).toString());
+                                    if(hour!=-1){
+                                        h = hour -1;
+                                        m = 30+minutes;
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+
+                }
+
+
+            }
+            Log.d("alarm: ","WC: "+2+" "+h+":"+m+ " "+AM_PM);
+            Toast.makeText(this,"alarm: WC: "+3+"  "+h+":"+m+ " "+AM_PM, Toast.LENGTH_SHORT).show();
+            //setter.setAlarm(h,m,AM_PM,"");
+
+        }
+        else if(len == 4){
+
+        }
+
+
+    }
+    public ArrayList getInputArray(String str){
+        ArrayList command = new ArrayList();
+        //command.add(str.charAt(0)+"");
+        String arg = "";
+        for(int i=0; i<str.length(); i++){
+            if(str.charAt(i) == ' '){
+                if(arg != ""){
+                    Log.d(arg,"test");
+
+                    command.add(arg.trim());
+                }
+                arg = "";
+            }
+            arg = arg + str.charAt(i)+"";
+            if(i == str.length()-1){
+                if(arg !=""){
+
+                    command.add(arg.trim());
+                }
+            }
+        }
+        return command;
+    }
+
+    public void getNewContactPhone(View view) throws RemoteException, OperationApplicationException {
+
+        String phoneInput = ((EditText)findViewById(R.id.phoneText)).getText().toString();
+        ArrayList command = getInputArray(phoneInput);
+
+        NewContact contact = new NewContact(this);
+        newContactPhone = contact.convertNumbers(command);
+        //Toast.makeText(this,"phone: "+phoneInput, Toast.LENGTH_LONG).show();
+        setContentView(R.layout.new_contact_save);
+
+    }
+    public void saveContact(View view) throws RemoteException, OperationApplicationException {
+        String nameInput = ((EditText)findViewById(R.id.nameText)).getText().toString();
+        if(nameInput != ""){
+            new NewContact(this).addContact(nameInput, newContactPhone);
+            Toast.makeText(this,"Contact Saved!", Toast.LENGTH_LONG).show();
+            setContentView(R.layout.activity_main);
+        }
+
+    }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

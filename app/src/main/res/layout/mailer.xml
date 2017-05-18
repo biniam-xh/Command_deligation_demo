@@ -3,46 +3,95 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:text="send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/button"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:onClick="sendEmail2"
+    <ViewFlipper
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="140dp" />
+        android:layout_alignParentStart="true"
+        android:id="@+id/viewFlipper">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textMultiLine"
-        android:ems="10"
-        android:id="@+id/bodyText"
-        android:hint="body"
-        android:layout_above="@+id/button"
-        android:layout_alignStart="@+id/subjectText"
-        android:layout_marginBottom="33dp" />
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:ems="10"
+                android:id="@+id/emailText"
+                android:hint="email"
+                android:layout_marginEnd="68dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="209dp" />
+            <Button
+                android:text="next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/button"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:onClick="flip1"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="140dp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:layout_marginEnd="68dp"
+                android:ems="10"
+                android:id="@+id/subjectText"
+                android:hint="subject"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="209dp"/>
+            <Button
+                android:text="next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/button1"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:onClick="flip2"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="140dp"
+                />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <Button
+                android:text="send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/button5"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:onClick="sendEmail2"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="140dp" />
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:ems="10"
-        android:id="@+id/subjectText"
-        android:hint="subject"
-        android:layout_above="@+id/bodyText"
-        android:layout_centerHorizontal="true" />
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:layout_marginEnd="68dp"
+                android:ems="10"
+                android:id="@+id/bodyText"
+                android:hint="body"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="33dp"
+                android:layout_marginTop="209dp"/>
+        </RelativeLayout>
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:ems="10"
-        android:layout_above="@+id/subjectText"
-        android:layout_alignEnd="@+id/subjectText"
-        android:id="@+id/emailText"
-        android:hint="email"
-        android:layout_alignStart="@+id/subjectText" />
+
+
+
+
+    </ViewFlipper>
 </RelativeLayout>
+
+
